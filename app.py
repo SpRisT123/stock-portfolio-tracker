@@ -15,7 +15,7 @@ st.markdown(
         display: none !important;
     }
     .st-key-positions p {
-        white-space: nowrap !important;
+        white-space: balance !important;
         font-size: 0.95rem !important;
     }
     .block-container {
@@ -46,7 +46,9 @@ st.markdown(
     [role="tab"] p {
         font-size: 1rem !important;
     }
-        
+    [data-testid="InputInstructions"] {
+        display: none !important;
+    }   
     </style>
 """,
     unsafe_allow_html=True,
@@ -96,32 +98,29 @@ with top_left:
 
 with top_right:
     if "portfolio_id" in st.session_state:
-        with st.popover("+ Add Transaction", width='stretch'):
-            with st.form("tx_form", clear_on_submit=True, border=False):
-                ticker = st.text_input("Ticker").upper().strip()
-                tx_type = st.selectbox("Type", ["BUY", "SELL"])
-                shares = st.number_input("Shares", min_value=0.01, value=1.0, step=1.0)
-                price = st.number_input("Price", min_value=0.01, value=100.0, step=1.0)
-                tx_date = st.date_input("Date")
-                if (
-                    st.form_submit_button(
-                        "Save", type="primary", width='stretch'
-                    )
-                    and ticker
-                ):
-                    real_ticker, name, sector, asset_curr = an.get_asset_info(ticker)
-                    db.add_transaction(
-                        st.session_state["portfolio_id"],
-                        real_ticker,
-                        name,
-                        sector,
-                        asset_curr,
-                        tx_type,
-                        shares,
-                        price,
-                        str(tx_date),
-                    )
-                    st.rerun()
+        with st.popover("Add Transaction", width="stretch"):
+            ticker = st.text_input("Ticker").upper().strip()
+            default_price = 100.0
+            if ticker:
+                real_ticker, name, sector, asset_curr, default_price = an.get_asset_info(ticker)
+                st.caption(f"{real_ticker} — {name} ({asset_curr})")
+            tx_type = st.selectbox("Type", ["BUY", "SELL"])
+            shares = st.number_input("Shares", min_value=0.01, value=1.0, step=1.0)
+            price = st.number_input("Price", min_value=0.01, value=default_price, step=1.0)
+            tx_date = st.date_input("Date")
+            if st.button("Save", type="primary", width="stretch") and ticker:
+                db.add_transaction(
+                    st.session_state["portfolio_id"],
+                    real_ticker,
+                    name,
+                    sector,
+                    asset_curr,
+                    tx_type,
+                    shares,
+                    price,
+                    str(tx_date),
+                )
+                st.rerun()
 
 if "portfolio_id" in st.session_state:
     p_row = portfolios[portfolios["id"] == st.session_state["portfolio_id"]].iloc[0]
