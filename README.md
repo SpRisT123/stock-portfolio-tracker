@@ -21,5 +21,6 @@ Multi-currency portfolio tracker in Python (`Streamlit`, `SQLite`, `Plotly`, `yf
 
 ## Run
 ```bash
+pip install requirements.txt
 streamlit run app.py
 ```
