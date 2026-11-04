@@ -81,6 +81,8 @@ def calculate_risk_metrics(df, confidence=0.95):
 
     prices = yf.download(tickers, start="2020-01-01", progress=False)["Close"]
     returns = np.log(prices / prices.shift(1)).dropna()
+    if returns.empty:
+        return None
     portfolio_returns = returns @ weights[returns.columns]
 
     hist_var = -np.percentile(portfolio_returns, (1 - confidence) * 100)
@@ -109,6 +111,8 @@ def calculate_markowitz(df):
 
     prices = yf.download(stocks, start="2020-01-01", progress=False)["Close"]
     returns = np.log(prices / prices.shift(1)).dropna()
+    if returns.empty:
+        return None
     mean_returns = returns.mean() * 252
     cov_matrix = returns.cov() * 252
 

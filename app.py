@@ -154,13 +154,17 @@ if "portfolio_id" in st.session_state:
                 label_visibility="collapsed")
 
                 hist = an.get_portfolio_history(df, periods.get(selected_p, "1y"))
-                fig_hist = px.line(
-                x=hist.index,
-                y=hist.values,
-                labels={"x": "Date", "y": f"Value ({p_curr})"},
-                color_discrete_sequence=["#5AE184"])
-                fig_hist.update_traces(hovertemplate=f"%{{x}}<br><b>%{{y:,.2f}} {p_curr}</b><extra></extra>")
-                st.plotly_chart(fig_hist, width='stretch')
+                if hist.empty:
+                    st.warning("Couldn't load price history from Yahoo Finance. Try again later.")
+                else:
+                    fig_hist = px.line(
+                        x=hist.index,
+                        y=hist.values,
+                        labels={"x": "Date", "y": f"Value ({p_curr})"},
+                        color_discrete_sequence=["#5AE184"],
+                    )
+                    fig_hist.update_traces(hovertemplate=f"%{{x}}<br><b>%{{y:,.2f}} {p_curr}</b><extra></extra>")
+                    st.plotly_chart(fig_hist, width="stretch")
 
                 for i, row in df.iterrows():
                     c1, c2, c3, c4 = st.columns([2.1, 0.95, 1.25, 1.15])
@@ -221,43 +225,45 @@ if "portfolio_id" in st.session_state:
 
         with tab_risk:
             risk = an.calculate_risk_metrics(df)
+            if risk is None:
+                st.warning("Couldn't load price history from Yahoo Finance. Try again later.")
+            else:
+                r1, r2, r3, r4 = st.columns(4)
+                r1.metric("Daily VaR (95%)", f"{risk['var']:.2%}")
+                r2.metric("Daily CVaR (95%)", f"{risk['cvar']:.2%}")
+                r3.metric("Annual Volatility", f"{risk['volatility']:.2%}")
+                r4.metric("Sharpe Ratio", f"{risk['sharpe']:.2f}")
 
-            r1, r2, r3, r4 = st.columns(4)
-            r1.metric("Daily VaR (95%)", f"{risk['var']:.2%}")
-            r2.metric("Daily CVaR (95%)", f"{risk['cvar']:.2%}")
-            r3.metric("Annual Volatility", f"{risk['volatility']:.2%}")
-            r4.metric("Sharpe Ratio", f"{risk['sharpe']:.2f}")
-
-            fig_var = px.histogram(
-                x=risk["portfolio_returns"],
-                color_discrete_sequence=["#660033"],
-                nbins=100,
-                labels={"x": "Daily Return"},
-                title="Historical Returns & VaR (95%)",
-            )
-            fig_var.add_vline(
-                x=-risk["var"],
-                line_dash="dash",
-                line_color="red",
-                annotation_text="VaR 95%",
-            )
-            fig_var.add_vline(
-                x=-risk["cvar"],
-                line_dash="dot",
-                line_color="orange",
-                annotation_text="CVaR 95%",
-            )
-            fig_var.update_traces(
-                hovertemplate="Return: <b>%{x:.2%}</b><br>Days: <b>%{y}</b><extra></extra>"
-            )
-            fig_var.update_layout(yaxis_title="Number of Days")
-            st.plotly_chart(fig_var, width='stretch')
+                fig_var = px.histogram(
+                    x=risk["portfolio_returns"],
+                    color_discrete_sequence=["#660033"],
+                    nbins=100,
+                    labels={"x": "Daily Return"},
+                    title="Historical Returns & VaR (95%)",
+                )
+                fig_var.add_vline(
+                    x=-risk["var"],
+                    line_dash="dash",
+                    line_color="red",
+                    annotation_text="VaR 95%",
+                )
+                fig_var.add_vline(
+                    x=-risk["cvar"],
+                    line_dash="dot",
+                    line_color="orange",
+                    annotation_text="CVaR 95%",
+                )
+                fig_var.update_traces(
+                    hovertemplate="Return: <b>%{x:.2%}</b><br>Days: <b>%{y}</b><extra></extra>"
+                )
+                fig_var.update_layout(yaxis_title="Number of Days")
+                st.plotly_chart(fig_var, width="stretch")
 
         with tab_markowitz:
             result = an.calculate_markowitz(df)
             if result is None:
                 st.info(
-                    "Add at least 2 different stocks to run Markowitz optimization."
+                    "Add at least 2 different stocks to run Markowitz optimization (or price data is unavailable)."
                 )
             else:
                 sim_df, max_sharpe_w = result
