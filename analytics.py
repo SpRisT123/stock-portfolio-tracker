@@ -2,44 +2,34 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 import numpy as np
-import requests
-
 
 @st.cache_data(ttl=300, show_spinner=False)
 def get_asset_info(query):
     ticker = query.upper().strip()
-    stock = yf.Ticker(ticker)
-    hist = stock.history(period="5d")
-
-    if hist.empty:
+    info = yf.Ticker(ticker).info
+    
+    if not info or ("regularMarketPrice" not in info and "currentPrice" not in info and "previousClose" not in info):
         results = yf.Search(query, max_results=5).quotes
         if results:
             ticker = results[0]["symbol"]
-            stock = yf.Ticker(ticker)
-            hist = stock.history(period="5d")
+            info = yf.Ticker(ticker).info
 
-    meta = stock.history_metadata if not hist.empty else {}
-    quotes = yf.Search(ticker, max_results=5).quotes
-    quote = next((q for q in quotes if q["symbol"] == ticker), {})
-
-    name = meta.get("longName") or quote.get("longname") or meta.get("shortName") or ticker
-    sector = quote.get("sectorDisp") or quote.get("sector") or "ETF / Other"
-    currency = meta.get("currency", "USD")
-    price = float(hist["Close"].dropna().iloc[-1]) if not hist.empty else 100.0
-    return ticker, name, sector, currency, price
+    name = info.get("longName") or info.get("shortName", ticker)
+    sector = info.get("sector", "ETF / Other")
+    currency = info.get("currency", "USD")
+    live_price = info.get("currentPrice") or info.get("regularMarketPrice") or info.get("previousClose") or 100.0
+    return ticker, name, sector, currency, float(live_price)
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=300)
 def get_fx_rate(from_curr, to_curr):
     if from_curr == to_curr:
         return 1.0
-    try:
-        url = "https://api.frankfurter.app/latest"
-        r = requests.get(url, params={"from": from_curr, "to": to_curr}, timeout=5)
-        return float(r.json()["rates"][to_curr])
-    except Exception:
-        data = yf.download(f"{from_curr}{to_curr}=X", period="5d", progress=False)["Close"].squeeze()
-        return float(data.dropna().iloc[-1]) if len(data) > 0 else 1.0
+    pair = f"{from_curr}{to_curr}=X"
+    data = yf.download(pair, period="5d", progress=False)["Close"].squeeze()
+    if len(data) > 0:
+        return float(data.dropna().iloc[-1])
+    return 1.0
 
 
 @st.cache_data(ttl=300)
@@ -81,8 +71,6 @@ def calculate_risk_metrics(df, confidence=0.95):
 
     prices = yf.download(tickers, start="2020-01-01", progress=False)["Close"]
     returns = np.log(prices / prices.shift(1)).dropna()
-    if returns.empty:
-        return None
     portfolio_returns = returns @ weights[returns.columns]
 
     hist_var = -np.percentile(portfolio_returns, (1 - confidence) * 100)
@@ -111,8 +99,6 @@ def calculate_markowitz(df):
 
     prices = yf.download(stocks, start="2020-01-01", progress=False)["Close"]
     returns = np.log(prices / prices.shift(1)).dropna()
-    if returns.empty:
-        return None
     mean_returns = returns.mean() * 252
     cov_matrix = returns.cov() * 252
 
