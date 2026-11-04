@@ -6,18 +6,18 @@ Multi-currency portfolio tracker in Python (`Streamlit`, `SQLite`, `Plotly`, `yf
 - Local SQLite database (`db.py`) for storing multiple portfolios, assets, and BUY/SELL transactions
 - Automatic ticker lookup for US & European stocks (e.g. GPW `.WA`, Xetra `.DE`) and live FX conversion (`USD`, `EUR`, `PLN`)
 - Portfolio valuation chart (`1M`, `3M`, `6M`, `1Y`, `5Y`), P&L breakdown, and asset/sector allocation charts
-- Historical Value at Risk ($\text{VaR}_{95\%}$), Expected Shortfall ($\text{CVaR}_{95\%}$), annualized volatility, and Sharpe Ratio
+- Historical Value at Risk (`VaR 95%`), Expected Shortfall (`CVaR 95%`), annualized volatility, and Sharpe Ratio
 - Monte Carlo Markowitz Efficient Frontier simulation for optimal portfolio weights
 
 ## Screenshots
 
-![Portfolio Value](images/overview1.png)
+![Portfolio Value](images/Overview1.png)
 
-![Holdings & Allocation](images/overview2.png)
+![Holdings & Allocation](images/Overview2.png)
 
-![Risk & VaR](images/risk%20%26%20var.png)
+![Risk & VaR](images/Risk%26VaR.png)
 
-![Markowitz Frontier](images/markowitz.png)
+![Markowitz Frontier](images/Markowitz.png)
 
 ## Run
 ```bash
