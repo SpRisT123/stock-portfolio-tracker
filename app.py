@@ -217,11 +217,16 @@ if "portfolio_id" in st.session_state:
                 st.plotly_chart(fig2, width='stretch')
             with st.expander("Transaction History"):
                 tx_df = db.get_transactions(st.session_state["portfolio_id"])
-                st.dataframe(tx_df, width='stretch', hide_index=True)
+                tx_df = tx_df.rename(columns={
+                    "ticker": "Ticker",
+                    "tx_type": "Type",
+                    "shares": "Number of Shares",
+                    "price": "Price",
+                    "tx_date": "Date"})
+                st.dataframe(tx_df[["Ticker", "Type", "Number of Shares", "Price", "Date"]], width='stretch', hide_index=True)
 
         with tab_risk:
             risk = an.calculate_risk_metrics(df)
-
             r1, r2, r3, r4 = st.columns(4)
             r1.metric("Daily VaR (95%)", f"{risk['var']:.2%}")
             r2.metric("Daily CVaR (95%)", f"{risk['cvar']:.2%}")
@@ -233,7 +238,7 @@ if "portfolio_id" in st.session_state:
                 color_discrete_sequence=["#660033"],
                 nbins=100,
                 labels={"x": "Daily Return"},
-                title="Historical Returns & VaR (95%)",
+                title="Historical Returns & VaR (95%)"
             )
             fig_var.add_vline(
                 x=-risk["var"],
