@@ -154,17 +154,13 @@ if "portfolio_id" in st.session_state:
                 label_visibility="collapsed")
 
                 hist = an.get_portfolio_history(df, periods.get(selected_p, "1y"))
-                if hist.empty:
-                    st.warning("Couldn't load price history from Yahoo Finance. Try again later.")
-                else:
-                    fig_hist = px.line(
-                        x=hist.index,
-                        y=hist.values,
-                        labels={"x": "Date", "y": f"Value ({p_curr})"},
-                        color_discrete_sequence=["#5AE184"],
-                    )
-                    fig_hist.update_traces(hovertemplate=f"%{{x}}<br><b>%{{y:,.2f}} {p_curr}</b><extra></extra>")
-                    st.plotly_chart(fig_hist, width="stretch")
+                fig_hist = px.line(
+                x=hist.index,
+                y=hist.values,
+                labels={"x": "Date", "y": f"Value ({p_curr})"},
+                color_discrete_sequence=["#5AE184"])
+                fig_hist.update_traces(hovertemplate=f"%{{x}}<br><b>%{{y:,.2f}} {p_curr}</b><extra></extra>")
+                st.plotly_chart(fig_hist, width='stretch')
 
                 for i, row in df.iterrows():
                     c1, c2, c3, c4 = st.columns([2.1, 0.95, 1.25, 1.15])
