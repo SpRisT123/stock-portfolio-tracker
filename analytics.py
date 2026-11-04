@@ -7,7 +7,7 @@ import numpy as np
 def get_asset_info(query):
     ticker = query.upper().strip()
     info = yf.Ticker(ticker).info
-    
+
     if not info or ("regularMarketPrice" not in info and "currentPrice" not in info and "previousClose" not in info):
         results = yf.Search(query, max_results=5).quotes
         if results:
@@ -17,7 +17,7 @@ def get_asset_info(query):
     name = info.get("longName") or info.get("shortName", ticker)
     sector = info.get("sector", "ETF / Other")
     currency = info.get("currency", "USD")
-    live_price = info.get("currentPrice") or info.get("regularMarketPrice") or info.get("previousClose") or 100.0
+    live_price = info.get("currentPrice") or info.get("regularMarketPrice") or info.get("previousClose")
     return ticker, name, sector, currency, float(live_price)
 
 
