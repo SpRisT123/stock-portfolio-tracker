@@ -184,7 +184,7 @@ if "portfolio_id" in st.session_state:
                         y=bench_hist.values,
                         mode="lines",
                         name=selected_b,
-                        line=dict(color="rgba(255, 255, 255, 0.35)", width=2, dash="dot"),
+                        line=dict(color="#660033", width=2),
                         hovertemplate=f"{selected_b}: <b>%{{y:,.2f}} {p_curr}</b><extra></extra>",
                     )
 

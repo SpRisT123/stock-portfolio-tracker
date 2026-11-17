@@ -1,4 +1,3 @@
-from matplotlib.pyplot import hist
 import streamlit as st
 import yfinance as yf
 import pandas as pd
@@ -132,15 +131,15 @@ def calculate_markowitz(df):
 
 
 @st.cache_data(ttl=300)
-def get_portfolio_history(df, hist, period="1y"):
+def get_portfolio_history(df, period="1y"):
     tickers = df["ticker"].tolist()
     prices = yf.download(tickers, period=period, progress=False)["Close"].ffill().dropna()
     multipliers = df.set_index("ticker")["shares"] * df.set_index("ticker")["fx_rate"]
     return prices @ multipliers[prices.columns]
 
 @st.cache_data(ttl=300)
-def get_benchmark_history(ticker, hist, period="1y"):
+def get_benchmark_history(ticker, history, period="1y"):
     benchmark_prices = yf.download(ticker, period=period, progress=False)["Close"].squeeze()
-    benchmark_prices = benchmark_prices.reindex(hist.index).ffill().bfill()
-    bench=(benchmark_prices / benchmark_prices.iloc[0]) * hist.iloc[0]
+    benchmark_prices = benchmark_prices.reindex(history.index).ffill().bfill()
+    bench=(benchmark_prices / benchmark_prices.iloc[0]) * history.iloc[0]
     return bench
