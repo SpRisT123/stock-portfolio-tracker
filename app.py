@@ -147,20 +147,48 @@ if "portfolio_id" in st.session_state:
         with tab_overview:
             with st.container(border=True, key="positions"):
                 periods = {"1M": "1mo", "3M": "3mo", "6M": "6mo", "1Y": "1y", "5Y": "5y"}
-                selected_p = st.segmented_control(
-                "Timeframe",
-                list(periods.keys()),
-                default="1Y",
-                label_visibility="collapsed")
+                benchmarks = {"None": None, "S&P 500": "SPY", "NASDAQ": "QQQ", "Poland (MSCI)": "EPOL"}
 
-                hist = an.get_portfolio_history(df, periods.get(selected_p, "1y"))
+                col_p, col_b = st.columns([2, 1])
+                with col_p:
+                    selected_p = st.segmented_control(
+                        "Timeframe",
+                        list(periods.keys()),
+                        default="1Y",
+                        label_visibility="collapsed",
+                    )
+                with col_b:
+                    selected_b = st.selectbox(
+                        "Benchmark",
+                        list(benchmarks.keys()),
+                        label_visibility="collapsed",
+                    )
+
+                period_str = periods.get(selected_p, "1y")
+                hist = an.get_portfolio_history(df, period_str)
                 fig_hist = px.line(
-                x=hist.index,
-                y=hist.values,
-                labels={"x": "Date", "y": f"Value ({p_curr})"},
-                color_discrete_sequence=["#5AE184"])
-                fig_hist.update_traces(hovertemplate=f"%{{x}}<br><b>%{{y:,.2f}} {p_curr}</b><extra></extra>")
-                st.plotly_chart(fig_hist, width='stretch')
+                    x=hist.index,
+                    y=hist.values,
+                    labels={"x": "Date", "y": f"Value ({p_curr})"},
+                    color_discrete_sequence=["#5AE184"],
+                )
+                fig_hist.update_traces(
+                    name="Portfolio",
+                    hovertemplate=f"Portfolio: <b>%{{y:,.2f}} {p_curr}</b><extra></extra>",
+                )
+
+                if benchmarks[selected_b] is not None:
+                    bench_hist = an.get_benchmark_history(benchmarks[selected_b], hist, period_str)
+                    fig_hist.add_scatter(
+                        x=bench_hist.index,
+                        y=bench_hist.values,
+                        mode="lines",
+                        name=selected_b,
+                        line=dict(color="rgba(255, 255, 255, 0.35)", width=2, dash="dot"),
+                        hovertemplate=f"{selected_b}: <b>%{{y:,.2f}} {p_curr}</b><extra></extra>",
+                    )
+
+                st.plotly_chart(fig_hist, width="stretch")
 
                 for i, row in df.iterrows():
                     c1, c2, c3, c4 = st.columns([2.1, 0.95, 1.25, 1.15])
